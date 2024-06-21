@@ -47,10 +47,11 @@ class MusicPlayer(QMainWindow):
     def init_ui(self):
         global playlist
         self.setWindowTitle('Music Player')
+        self.setWindowIcon(QIcon(fr"{PATH}/assets/icons/music.png"))
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.setGeometry(100, 100, 800, 500)
-        self.setMinimumSize(100, 100)
-        self.setMinimumSize(100, 100)
+        self.setMinimumSize(800, 500)
+        self.setMaximumSize(800, 500)
 
         self.cover_label = QLabel(self)
         self.cover_label.setGeometry(QRect(10, 10, 300, 300))
