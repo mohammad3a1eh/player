@@ -10,7 +10,6 @@ def mp3finder(autoload):
         for root, dirs, files in walk(path.replace("\n", "")):
             for file in files:
                 if file.endswith(".mp3"):
-                    file_s.append(fr"{root}{file}")
+                    file_s.append(fr"{root}/{file}")
 
-    print(file_s, file)
-    return file_s, file
+    return file_s

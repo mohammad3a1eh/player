@@ -11,6 +11,7 @@ from win32mica import ApplyMica, MicaTheme, MicaStyle
 from models import style
 from models import loader
 from pygame import mixer
+import os
 
 
 mixer.init()
@@ -168,11 +169,18 @@ class MusicPlayer(QMainWindow):
 
         ApplyMica(self.winId(), MicaTheme.AUTO, MicaStyle.DEFAULT, OnThemeChange=self.ApplyStyleSheet)
         self.show()
+        
+        self.auto_add_file()
 
 
     def add_file(self):
+        
         file_paths = QFileDialog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
-        for file in file_paths[0]:
+        paths = file_paths[0]
+            
+        # file_paths = QFileDialog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
+        for file in paths:
+            print(file_paths)
             playlist["name"].append(file.split("/")[-1])
             playlist["path"].append(file)
 
@@ -192,6 +200,34 @@ class MusicPlayer(QMainWindow):
 
             item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
             self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
+
+    def auto_add_file(self):
+        
+        # file_paths = QFile?alog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
+        paths = loader.mp3finder("autoload.txt")
+            
+        # file_paths = QFileDialog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
+        for file in paths:
+            playlist["name"].append(file.split("/")[-1])
+            playlist["path"].append(file)
+
+            item = QStandardItem(file.split("/")[-1])
+
+
+            self.model.appendRow(item)
+
+            audio = MP3(file)
+            try:
+                apic = audio.tags['APIC:'].data
+                cover = QPixmap()
+                cover.loadFromData(apic)
+                cover = cover.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+            except:
+                cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+
+            item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
+            self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
+
 
 
     def del_file(self):
