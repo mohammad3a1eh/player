@@ -1,5 +1,29 @@
 # player
-- Music player with python and pygame
+```text
+Project: Player
+Author: Mohammad Saleh (mohammad3a1eh)
+GitHub: https://github.com/mohammad3a1eh/player
+
+Description:
+This Python project is a multimedia player designed to play audio files from a user-friendly interface.
+It allows users to browse, select, and play their favorite media files directly from their local storage.
+
+Features:
+- Support for various audio formats (just MP3).
+- Simple and intuitive graphical user interface (GUI).
+- Play, pause, stop, next, previous.
+- Volume control and mute option.
+- Playlist management: add, remove, and organize multiple media files.
+- Display of media information, such as duration, file name, and current time.
+- Lightweight and fast performance suitable for everyday use.
+
+Dependencies:
+- Python 3.x
+- Required libraries: (list the necessary Python libraries like `pygame`, `win32mica`, `mutagen`, `winreg`, etc.)
+
+Usage:
+Run the main script to launch the player. Users can interact with the GUI to manage their media files and enjoy seamless playback.
+```
 
 <img src="https://raw.githubusercontent.com/mohammad3a1eh/player/main/assets/dark.png" alt="dark mode"/>
 <img src="https://raw.githubusercontent.com/mohammad3a1eh/player/main/assets/light.png" alt="light mode"/>
