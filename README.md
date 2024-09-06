@@ -32,4 +32,5 @@ Run the main script to launch the player. Users can interact with the GUI to man
 ## Download Links (all version)
 <a href="https://github.com/mohammad3a1eh/player/releases/download/v1.0.0/PyMusicPlayerInstaller.exe" title="Download 1.0.0" download>Download v1.0.0 ( It just works! 😊😂 )</a><br>
 <a href="https://github.com/mohammad3a1eh/player/releases/download/v1.0.1/PyMusicPlayerInstaller.exe" title="Download 1.0.1" download>Download v1.0.1 ( Added automatic accent color adjustment )</a><br>
-<a href="https://github.com/mohammad3a1eh/player/releases/download/v1.1.0/PyMusicPlayerInstaller.exe" title="Download 1.1.0" download>Download v1.1.0 ( Added automatic music loader )</a>
+<a href="https://github.com/mohammad3a1eh/player/releases/download/v1.1.0/PyMusicPlayerInstaller.exe" title="Download 1.1.0" download>Download v1.1.0 ( Added automatic music loader )</a><br>
+<a href="https://github.com/mohammad3a1eh/player/releases/download/v1.2.0/PyMusicPlayerInstaller.exe" title="Download 1.2.0" download>Download v1.2.0 ( Added thumbnail buttons 😁😎 )</a>
