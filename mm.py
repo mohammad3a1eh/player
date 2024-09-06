@@ -1,3 +1,30 @@
+"""
+Project: Player
+Author: Mohammad Saleh (mohammad3a1eh)
+GitHub: https://github.com/mohammad3a1eh/player
+
+Description:
+This Python project is a multimedia player designed to play audio files from a user-friendly interface.
+It allows users to browse, select, and play their favorite media files directly from their local storage.
+
+Features:
+- Support for various audio formats (just MP3).
+- Simple and intuitive graphical user interface (GUI).
+- Play, pause, stop, next, previous.
+- Volume control and mute option.
+- Playlist management: add, remove, and organize multiple media files.
+- Display of media information, such as duration, file name, and current time.
+- Lightweight and fast performance suitable for everyday use.
+
+Dependencies:
+- Python 3.x
+- Required libraries: (list the necessary Python libraries like `pygame`, `win32mica`, `mutagen`, `winreg`, etc.)
+
+Usage:
+Run the main script to launch the player. Users can interact with the GUI to manage their media files and enjoy seamless playback.
+
+"""
+
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap
@@ -14,9 +41,18 @@ from pygame import mixer
 import os
 
 
+# ===========thumbnail buttons=============
+from PyQt5.QtWinExtras import QWinThumbnailToolBar, QWinThumbnailToolButton
+# =========================================
+
+
+# Initialize the mixer module for sound playback
 mixer.init()
 
+# Get the current working directory and store it in PATH
 PATH = getcwd()
+
+# Define necessary variables
 is_play = False
 playlist = {
     "name": [],
@@ -26,12 +62,18 @@ played_music = None
 played_count = 0
 music_length = 0
 
+
+# Define the MusicPlayer class inheriting from QMainWindow
 class MusicPlayer(QMainWindow):
+    # Initialize the user interface
     def __init__(self):
         super().__init__()
 
         self.init_ui()
 
+
+
+    # Apply the specified stylesheet based on the selected theme
     def ApplyStyleSheet(self, theme):
         if theme == MicaTheme.DARK:
             self.setStyleSheet(style.dark)
@@ -39,12 +81,17 @@ class MusicPlayer(QMainWindow):
             self.setStyleSheet(style.light)
 
 
+
+    # Add a file to the global 'files' dictionary if it is not already present
     def add_to_files(self, path):
         global files
         filename = path.split('\\')[-1]
         if filename not in files:
             files[filename] = path
 
+
+
+    # Initialize the user interface components
     def init_ui(self):
         global playlist
         self.setWindowTitle('Music Player')
@@ -53,6 +100,29 @@ class MusicPlayer(QMainWindow):
         self.setGeometry(100, 100, 800, 500)
         self.setMinimumSize(800, 500)
         self.setMaximumSize(800, 500)
+        
+        # ===========thumbnail buttons=============
+        self.toolBar = QWinThumbnailToolBar(self)
+        
+        self.toolBtnPrev = QWinThumbnailToolButton(self.toolBar)
+        self.toolBtnPrev.setToolTip('Previous')
+        self.toolBtnPrev.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.toolBtnPrev.clicked.connect(self.prevsong)
+        self.toolBar.addButton(self.toolBtnPrev)
+        
+        self.toolBtnControl = QWinThumbnailToolButton(self.toolBar)
+        self.toolBtnControl.setToolTip('Play')
+        self.toolBtnControl.setProperty('status', 0)
+        self.toolBtnControl.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.toolBtnControl.clicked.connect(self.play_pause)
+        self.toolBar.addButton(self.toolBtnControl)
+        
+        self.toolBtnNext = QWinThumbnailToolButton(self.toolBar)
+        self.toolBtnNext.setToolTip('Next')
+        self.toolBtnNext.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.toolBtnNext.clicked.connect(self.nextsong)
+        self.toolBar.addButton(self.toolBtnNext)
+        # =========================================
 
         self.cover_label = QLabel(self)
         self.cover_label.setGeometry(QRect(10, 10, 300, 300))
@@ -140,7 +210,6 @@ class MusicPlayer(QMainWindow):
         self.music_name = QLabel(self)
         self.music_name.setObjectName(u"music_name")
         self.music_name.setText("")
-        # self.music_name.setStyleSheet("border: 1px solid red")
         self.music_name.setGeometry(QRect(10, 310, 300, 71))
         font1 = QFont()
         font1.setPointSize(13)
@@ -163,22 +232,43 @@ class MusicPlayer(QMainWindow):
         self.progressBar.setValue(24)
         self.progressBar.setTextVisible(False)
 
+        # Initialize the timer with a 1-second interval and connect it to the updateprogressbar method
         self.timer = QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.updateprogressbar)
 
+        # Apply Mica style to the window and show the window
         ApplyMica(self.winId(), MicaTheme.AUTO, MicaStyle.DEFAULT, OnThemeChange=self.ApplyStyleSheet)
         self.show()
         
         self.auto_add_file()
+        
+        
+        
+    # ===========thumbnail buttons=============
+    # Handle the show event to set the toolbar window
+    def showEvent(self, event):
+        super(MusicPlayer, self).showEvent(event)
+        if not self.toolBar.window():
+            self.toolBar.setWindow(self.windowHandle())
+    # =========================================
+
 
 
     def add_file(self):
+        """
+        Opens a file dialog to select audio files and adds them to the playlist.
+        For each selected file:
+        - Adds the file name and path to the playlist.
+        - Creates a list item for the file and adds it to the model.
+        - Attempts to extract and display the album cover from the file.
+        - Sets a default icon if the cover is not available.
+        - Updates the label to show the total number of songs in the playlist.
+        """
         
         file_paths = QFileDialog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
         paths = file_paths[0]
             
-        # file_paths = QFileDialog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
         for file in paths:
             print(file_paths)
             playlist["name"].append(file.split("/")[-1])
@@ -201,12 +291,22 @@ class MusicPlayer(QMainWindow):
             item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
             self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
 
+
+
     def auto_add_file(self):
+        """
+        Automatically adds files from a predefined list to the playlist.
+        - Reads file paths from 'autoload.txt' using the 'mp3finder' method.
+        - For each file path:
+        - Adds the file name and path to the playlist.
+        - Creates a list item for the file and appends it to the model.
+        - Attempts to extract and display the album cover from the file.
+        - Uses a default icon if the cover is not available.
+        - Updates the label to show the total number of songs in the playlist.
+        """
         
-        # file_paths = QFile?alog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
         paths = loader.mp3finder("autoload.txt")
             
-        # file_paths = QFileDialog.getOpenFileNames(self,"Add Sound","","Sound Filed(*.mp3)")
         for file in paths:
             playlist["name"].append(file.split("/")[-1])
             playlist["path"].append(file)
@@ -231,34 +331,71 @@ class MusicPlayer(QMainWindow):
 
 
     def del_file(self):
+        """
+        Deletes the currently selected file from the playlist.
+        - Retrieves the selected file name from the list view.
+        - Attempts to remove the file's path and name from the playlist:
+        - If successful, clears and rebuilds the model with the updated playlist.
+        - For each remaining file:
+            - Creates a list item and appends it to the model.
+            - Attempts to extract and display the album cover.
+            - Uses a default icon if the cover is not available.
+        - Updates the label to show the new total number of songs in the playlist.
+        - If the file name is not found, no action is taken (handles ValueError).
+        """
+
         index = self.music_list.currentIndex().data()
+        try:
+            playlist["path"].remove(playlist["path"][playlist["name"].index(index)])
+            playlist["name"].remove(index)
 
-        playlist["path"].remove(playlist["path"][playlist["name"].index(index)])
-        playlist["name"].remove(index)
+            self.model.clear()
 
-        self.model.clear()
+            for file in playlist["name"]:
+                item = QStandardItem(file)
+                self.model.appendRow(item)
+                audio = MP3(playlist["path"][playlist["name"].index(file)])
 
-        for file in playlist["name"]:
-            item = QStandardItem(file)
-            self.model.appendRow(item)
-            audio = MP3(playlist["path"][playlist["name"].index(file)])
+                try:
+                    apic = audio.tags['APIC:'].data
+                    cover = QPixmap()
+                    cover.loadFromData(apic)
+                    cover = cover.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                except:
+                    cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
 
-            try:
-                apic = audio.tags['APIC:'].data
-                cover = QPixmap()
-                cover.loadFromData(apic)
-                cover = cover.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-            except:
-                cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-
-            item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
-            self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
-
+                item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
+                self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
+        except ValueError:
+            pass
+        
+        
+        
     def change_volume(self, value):
+        """
+        Changes the volume of the music playback.
+        - Converts the provided volume value (0-100) to a range between 0.0 and 1.0.
+        - Sets the volume of the music mixer to the computed value.
+        """
+
         volume = value / 100.0
         mixer.music.set_volume(volume)
 
+
+
     def play_item(self):
+        """
+        Plays the currently selected music item from the playlist.
+        - Retrieves the selected file's path and updates global variables to reflect the currently playing track and reset play count.
+        - Loads and starts playing the selected music file using the mixer.
+        - Retrieves the length of the music track and updates the progress bar.
+        - Starts the timer to update the progress bar.
+        - Attempts to load and display the album cover for the music file; uses a default icon if the cover is not available.
+        - Updates the cover label with the album cover image.
+        - Sets the play status to 'True' and updates the displayed music name.
+        - Changes the play button icon to a 'pause' icon.
+        """
+
         global is_play, played_count, played_music, music_length
         index = self.music_list.currentIndex().data()
         music = playlist["path"][playlist["name"].index(index)]
@@ -283,15 +420,27 @@ class MusicPlayer(QMainWindow):
         except:
             cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
 
-
-
-
         self.cover_label.setPixmap(cover)
         is_play = True
         self.music_name.setText(playlist["name"][playlist["path"].index(music)])
         self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
 
+
+
     def nextsong(self):
+        """
+        Plays the next song in the playlist.
+        - Stops the timer and resets the play count.
+        - Attempts to set the next song to play:
+        - If the end of the playlist is reached, loops back to the first song.
+        - Loads and plays the selected music file using the mixer.
+        - Updates the progress bar with the length of the new track and starts the timer.
+        - Attempts to load and display the album cover for the new track; uses a default icon if the cover is not available.
+        - Updates the cover label with the album cover image.
+        - Sets the play status to 'True' and updates the displayed music name.
+        - Changes the play button icon to a 'pause' icon.
+        """
+
         global played_music, music_length, played_count, is_play
         played_count = 0
         self.timer.stop()
@@ -325,7 +474,21 @@ class MusicPlayer(QMainWindow):
         self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
 
 
+
     def prevsong(self):
+        """
+        Plays the previous song in the playlist.
+        - Stops the timer and resets the play count.
+        - Attempts to set the previous song to play:
+        - If at the beginning of the playlist, loops back to the last song.
+        - Loads and plays the selected music file using the mixer.
+        - Updates the progress bar with the length of the new track and starts the timer.
+        - Attempts to load and display the album cover for the new track; uses a default icon if the cover is not available.
+        - Updates the cover label with the album cover image.
+        - Sets the play status to 'True' and updates the displayed music name.
+        - Changes the play button icon to a 'pause' icon.
+        """
+
         global played_music, music_length, played_count, is_play
         played_count = 0
         self.timer.stop()
@@ -359,7 +522,18 @@ class MusicPlayer(QMainWindow):
         self.music_name.setText(playlist["name"][playlist["path"].index(music)])
         self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
 
+
+
     def stopsong(self):
+        """
+        Stops the current song and resets the player.
+        - Stops the timer and resets the play count.
+        - Stops the music playback and clears the progress bar.
+        - Updates the cover label to show a default music icon.
+        - Resets the play status and clears the displayed music name.
+        - Changes the play button icon to a 'play' icon.
+        """
+
         global played_count, played_music, is_play
         played_count = 0
         try:
@@ -378,15 +552,31 @@ class MusicPlayer(QMainWindow):
         self.play.setIcon(QIcon(fr"{PATH}/assets/icons/play.png"))
 
 
+
     def updateprogressbar(self):
+        """
+        Updates the progress bar based on the current playback position.
+        - Increments the play count if a song is playing.
+        - Updates the progress bar with the current play count.
+        - If the end of the song is reached, automatically plays the next song.
+        """
+
         global played_count, music_length
         if is_play:
             played_count += 1
             self.progressBar.setValue(played_count)
             if played_count == music_length:
                 self.nextsong()
+                
+                
 
     def play_pause(self):
+        """
+        Toggles between play and pause states for the current song.
+        - If the song is playing, pauses it and updates the play button icon to 'play'.
+        - If the song is paused, resumes playback and updates the play button icon to 'pause'.
+        """
+
         global is_play
         if is_play:
             is_play = False
@@ -399,11 +589,12 @@ class MusicPlayer(QMainWindow):
 
 
 
-
-
-
-
+# Starts the application and runs the music player
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     player = MusicPlayer()
     sys.exit(app.exec_())
+
+
+
+# All """comments""" in this code are written by ChatGPT, an AI language model, to provide explanations and descriptions of the functionality and behavior of the code.
