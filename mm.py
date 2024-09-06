@@ -582,10 +582,14 @@ class MusicPlayer(QMainWindow):
             is_play = False
             mixer.music.pause()
             self.play.setIcon(QIcon(fr"{PATH}/assets/icons/play.png"))
+            self.toolBtnControl.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+            self.toolBtnControl.setToolTip('Play')
         else:
             is_play = True
             mixer.music.unpause()
             self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
+            self.toolBtnControl.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
+            self.toolBtnControl.setToolTip('Pause')
 
 
 
