@@ -40,6 +40,8 @@ from models import loader
 from pygame import mixer
 import random
 import os
+import platform
+import ctypes
 
 
 # ===========thumbnail buttons=============
@@ -69,6 +71,27 @@ mods = {
     "No-repeat": fr"{PATH}/assets/icons/norepeat.png"
 }
 mod = list(mods.keys())[0]
+
+
+
+# Checks if dark mode is enabled by calling DwmGetWindowAttribute with attribute 20
+def is_dark_mode():
+    try:
+        is_dark = ctypes.windll.dwmapi.DwmGetWindowAttribute(0, 20)
+        return bool(is_dark)
+    except:
+        return False
+
+
+# Checks if the Windows version is 11 by looking for "10.0.22000" in the version string
+def win_11_detect():
+    version = platform.version()
+    if "10.0.22000" in version:
+        # return True
+        return False
+    else:
+        return False
+
 
 
 # Define the MusicPlayer class inheriting from QMainWindow
@@ -256,7 +279,13 @@ class MusicPlayer(QMainWindow):
         self.timer.timeout.connect(self.updateprogressbar)
 
         # Apply Mica style to the window and show the window
-        ApplyMica(self.winId(), MicaTheme.AUTO, MicaStyle.DEFAULT, OnThemeChange=self.ApplyStyleSheet)
+        if win_11_detect():
+            ApplyMica(self.winId(), MicaTheme.AUTO, MicaStyle.DEFAULT, OnThemeChange=self.ApplyStyleSheet)
+        else:
+            if is_dark_mode():
+                self.setStyleSheet(style.dark)
+            else:
+                self.setStyleSheet(style.light)
         self.show()
         
         self.auto_add_file()
@@ -707,7 +736,17 @@ class MusicPlayer(QMainWindow):
 
 # Starts the application and runs the music player
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    if win_11_detect():
+        app = QApplication(sys.argv)
+    else:
+        if is_dark_mode():
+            os.environ[
+                "QTWEBENGINE_CHROMIUM_FLAGS"
+            ] = "--blink-settings=darkMode=4,darkModeImagePolicy=2"
+            app = QApplication(sys.argv + ['-platform', 'windows:darkmode=1'])
+        else:
+            app = QApplication(sys.argv)
+    
     player = MusicPlayer()
     sys.exit(app.exec_())
 
