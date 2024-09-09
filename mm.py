@@ -38,11 +38,12 @@ from win32mica import ApplyMica, MicaTheme, MicaStyle
 from models import style
 from models import loader
 from pygame import mixer
+import random
 import os
 
 
 # ===========thumbnail buttons=============
-from PyQt5.QtWinExtras import QWinThumbnailToolBar, QWinThumbnailToolButton
+from PyQt5.QtWinExtras import QWinThumbnailToolBar, QWinThumbnailToolButton, QWinTaskbarButton
 # =========================================
 
 
@@ -61,6 +62,13 @@ playlist = {
 played_music = None
 played_count = 0
 music_length = 0
+mods = {
+    "Repeat-all": fr"{PATH}/assets/icons/repeat.png",
+    "Repeat-one": fr"{PATH}/assets/icons/repeatone.png",
+    "Shuffle": fr"{PATH}/assets/icons/shuffle.png",
+    "No-repeat": fr"{PATH}/assets/icons/norepeat.png"
+}
+mod = list(mods.keys())[0]
 
 
 # Define the MusicPlayer class inheriting from QMainWindow
@@ -113,7 +121,7 @@ class MusicPlayer(QMainWindow):
         self.toolBtnControl = QWinThumbnailToolButton(self.toolBar)
         self.toolBtnControl.setToolTip('Play')
         self.toolBtnControl.setProperty('status', 0)
-        self.toolBtnControl.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.toolBtnControl.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
         self.toolBtnControl.clicked.connect(self.play_pause)
         self.toolBar.addButton(self.toolBtnControl)
         
@@ -225,6 +233,16 @@ class MusicPlayer(QMainWindow):
         self.dial.setWrapping(False)
         mixer.music.set_volume(0.5)
         self.dial.valueChanged.connect(self.change_volume)
+        
+        self.mod_key = QPushButton(self)
+        self.mod_key.setObjectName(u"mod_key")
+        self.mod_key.setGeometry(QRect(635, 460, 31, 31))
+        self.mod_key.setIconSize(QSize(31, 31))
+        self.mod_key.setIcon(QIcon(mods[mod]))
+        self.mod_key.setStyleSheet(style.transparent)
+        self.mod_key.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.mod_key.clicked.connect(self.mod_key_action)
+        
 
         self.progressBar = QProgressBar(self)
         self.progressBar.setObjectName(u"progressBar")
@@ -472,6 +490,85 @@ class MusicPlayer(QMainWindow):
         is_play = True
         self.music_name.setText(playlist["name"][playlist["path"].index(music)])
         self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
+        
+        
+        
+    def nextsong_auto(self):
+        global played_music, music_length, played_count, is_play
+        played_count = 0
+        self.timer.stop()
+        
+        
+        if mod == "Repeat-all":
+            try:
+                played_music = playlist["name"][playlist["name"].index(played_music)+1]
+            except IndexError:
+                played_music = playlist["name"][0]
+                
+            music = playlist["path"][playlist["name"].index(played_music)]
+
+            mixer.music.load(music)
+            mixer.music.play()
+
+            audio = MP3(music)
+
+            music_length = round(audio.info.length)
+            self.progressBar.setMaximum(music_length)
+            self.progressBar.setValue(played_count)
+            self.timer.start()
+        elif mod == "Repeat-one":
+            try:
+                played_music = playlist["name"][playlist["name"].index(played_music)]
+            except IndexError:
+                played_music = playlist["name"][0]
+                
+            music = playlist["path"][playlist["name"].index(played_music)]
+
+            mixer.music.load(music)
+            mixer.music.play()
+
+            audio = MP3(music)
+
+            music_length = round(audio.info.length)
+            self.progressBar.setMaximum(music_length)
+            self.progressBar.setValue(played_count)
+            self.timer.start()
+        elif mod == "Shuffle":
+            maximum = len(playlist["name"])
+            choice = random.randint(0, maximum)
+            
+            played_music = playlist["name"][0]
+            music = playlist["path"][playlist["name"].index(played_music)]
+
+            mixer.music.load(music)
+            mixer.music.play()
+
+            audio = MP3(music)
+
+            music_length = round(audio.info.length)
+            self.progressBar.setMaximum(music_length)
+            self.progressBar.setValue(played_count)
+            self.timer.start()
+            
+        elif mod == "No-repeat":
+            audio = ""
+        
+
+        try:
+            apic = audio.tags['APIC:'].data
+            cover = QPixmap()
+            cover.loadFromData(apic)
+            cover = cover.scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+        except:
+            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+
+        self.cover_label.setPixmap(cover)
+        is_play = True
+        try:
+            self.music_name.setText(playlist["name"][playlist["path"].index(music)])
+        except:
+            pass
+        self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
 
 
 
@@ -566,7 +663,7 @@ class MusicPlayer(QMainWindow):
             played_count += 1
             self.progressBar.setValue(played_count)
             if played_count == music_length:
-                self.nextsong()
+                self.nextsong_auto()
                 
                 
 
@@ -590,7 +687,22 @@ class MusicPlayer(QMainWindow):
             self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
             self.toolBtnControl.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
             self.toolBtnControl.setToolTip('Pause')
-
+            
+            
+    
+    def mod_key_action(self):
+        global mod
+        
+        n_mod = list(mods.keys()).index(mod)
+        count_mod = len(list(mods.keys())) - 1
+        
+        if n_mod == count_mod:
+            mod = list(mods.keys())[0]
+        else:
+            mod = list(mods.keys())[n_mod + 1]
+            
+        self.mod_key.setIcon(QIcon(mods[mod]))
+        
 
 
 # Starts the application and runs the music player
