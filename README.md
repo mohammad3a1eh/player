@@ -24,10 +24,7 @@ Dependencies:
 Usage:
 Run the main script to launch the player. Users can interact with the GUI to manage their media files and enjoy seamless playback.
 ```
-
-<video controls="true">
-    <source src="https://youtu.be/vB7FjpDk8LU" type="video/mp4" />
-</video>
+<a href="https://youtu.be/vB7FjpDk8LU" title="youtube video">
 
 <img src="https://raw.githubusercontent.com/mohammad3a1eh/player/main/assets/dark.png" alt="dark mode"/>
 <img src="https://raw.githubusercontent.com/mohammad3a1eh/player/main/assets/light.png" alt="light mode"/>
