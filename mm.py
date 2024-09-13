@@ -226,7 +226,6 @@ class MusicPlayer(QMainWindow):
         self.next.setObjectName(u"next")
         self.next.setIconSize(QSize(51, 51))
         self.next.setIcon(QIcon(fr"{PATH}/assets/icons/next.png"))
-        # self.next.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         
         self.next.setStyleSheet(style.transparent)
         self.next.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -277,7 +276,6 @@ class MusicPlayer(QMainWindow):
         self.progressBar.sliderMoved.connect(self.sliderMoved)
         self.progressBar.sliderReleased.connect(self.handleSliderReleased)
         
-        # self.progressBar.setTextVisible(False)
 
         # Initialize the timer with a 1-second interval and connect it to the updateprogressbar method
         self.timer = QTimer()
