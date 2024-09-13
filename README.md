@@ -25,7 +25,9 @@ Usage:
 Run the main script to launch the player. Users can interact with the GUI to manage their media files and enjoy seamless playback.
 ```
 
-[![preview](https://img.youtube.com/vi/vB7FjpDk8LU/0.jpg)](https://www.youtube.com/watch?v=vB7FjpDk8LU)
+<iframe width="420" height="315"
+src="https://youtu.be/vB7FjpDk8LU">
+</iframe> 
 
 <img src="https://raw.githubusercontent.com/mohammad3a1eh/player/main/assets/dark.png" alt="dark mode"/>
 <img src="https://raw.githubusercontent.com/mohammad3a1eh/player/main/assets/light.png" alt="light mode"/>
