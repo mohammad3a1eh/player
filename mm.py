@@ -72,6 +72,7 @@ mods = {
 }
 mod = list(mods.keys())[0]
 
+color = tuple(int(style.accent_[i:i+2], 16) for i in (0, 2, 4))
 
 
 # Checks if dark mode is enabled by calling DwmGetWindowAttribute with attribute 20
@@ -87,10 +88,10 @@ def is_dark_mode():
 def win_11_detect():
     version = platform.version()
     if "10.0.22000" in version:
-        # return True
         return False
     else:
-        return False
+        return True
+
 
 
 
@@ -225,6 +226,8 @@ class MusicPlayer(QMainWindow):
         self.next.setObjectName(u"next")
         self.next.setIconSize(QSize(51, 51))
         self.next.setIcon(QIcon(fr"{PATH}/assets/icons/next.png"))
+        # self.next.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        
         self.next.setStyleSheet(style.transparent)
         self.next.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.next.setGeometry(QRect(250, 400, 51, 51))
@@ -267,11 +270,14 @@ class MusicPlayer(QMainWindow):
         self.mod_key.clicked.connect(self.mod_key_action)
         
 
-        self.progressBar = QProgressBar(self)
+        self.progressBar = QSlider(Qt.Horizontal ,self)
         self.progressBar.setObjectName(u"progressBar")
         self.progressBar.setGeometry(QRect(10, 470, 300, 16))
         self.progressBar.setValue(24)
-        self.progressBar.setTextVisible(False)
+        self.progressBar.sliderMoved.connect(self.sliderMoved)
+        self.progressBar.sliderReleased.connect(self.handleSliderReleased)
+        
+        # self.progressBar.setTextVisible(False)
 
         # Initialize the timer with a 1-second interval and connect it to the updateprogressbar method
         self.timer = QTimer()
@@ -493,7 +499,7 @@ class MusicPlayer(QMainWindow):
         self.timer.stop()
         try:
             played_music = playlist["name"][playlist["name"].index(played_music)+1]
-        except IndexError:
+        except:
             played_music = playlist["name"][0]
         music = playlist["path"][playlist["name"].index(played_music)]
 
@@ -566,7 +572,7 @@ class MusicPlayer(QMainWindow):
             maximum = len(playlist["name"])
             choice = random.randint(0, maximum)
             
-            played_music = playlist["name"][0]
+            played_music = playlist["name"][choice]
             music = playlist["path"][playlist["name"].index(played_music)]
 
             mixer.music.load(music)
@@ -620,7 +626,7 @@ class MusicPlayer(QMainWindow):
         self.timer.stop()
         try:
             played_music = playlist["name"][playlist["name"].index(played_music)-1]
-        except IndexError:
+        except:
             played_music = playlist["name"][-1]
 
 
@@ -720,6 +726,18 @@ class MusicPlayer(QMainWindow):
             
     
     def mod_key_action(self):
+        """
+        This function changes the current music playback mode.
+
+        - It checks the current mode stored in the global variable 'mod'.
+        - Then it cycles through the available modes in the 'mods' dictionary.
+        - If the current mode is the last one, it resets to the first mode.
+        - Otherwise, it moves to the next mode in the list.
+        - Finally, the corresponding icon for the new mode is updated on the UI, reflecting the change in playback mode.
+
+        This allows the user to switch between different playback modes (e.g., shuffle, repeat) for music tracks.
+        """
+        
         global mod
         
         n_mod = list(mods.keys()).index(mod)
@@ -731,7 +749,34 @@ class MusicPlayer(QMainWindow):
             mod = list(mods.keys())[n_mod + 1]
             
         self.mod_key.setIcon(QIcon(mods[mod]))
+
+    
         
+    def sliderMoved(self):
+        """
+        This function is triggered when the user moves the slider.
+        It manually adjusts the current position of the music track being played.
+        
+        - Retrieves the current value of the slider (representing the position in the track).
+        - Updates the 'played_count' variable globally to reflect this new position.
+        """
+        
+        global played_count
+
+        value = self.progressBar.value()
+        played_count = value
+        mixer.music.stop()
+
+        
+
+    def handleSliderReleased(self):
+        """
+        This function is triggered when the user releases the mouse after moving the slider.
+        It starts playing the music from the new position set by the slider.
+        """
+        
+        mixer.music.play(start=played_count)
+            
 
 
 # Starts the application and runs the music player

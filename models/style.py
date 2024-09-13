@@ -1,4 +1,4 @@
-# Most of the styles are from here: https://github.com/witalihirsch/QTVin11
+# Most of the styles are from here: https://github.com/witalihirsch/QTWin11
 
 from winreg import *
 
@@ -8,8 +8,8 @@ key_value = QueryValueEx(key,'AccentColorMenu')
 accent_int = key_value[0]
 accent = accent_int-4278190080
 accent = str(hex(accent)).split('x')[1]
-accent = accent[4:6]+accent[2:4]+accent[0:2]
-accent = 'rgb'+str(tuple(int(accent[i:i+2], 16) for i in (0, 2, 4)))
+accent_ = accent[4:6]+accent[2:4]+accent[0:2]
+accent = 'rgb'+str(tuple(int(accent_[i:i+2], 16) for i in (0, 2, 4)))
 
 transparent = "background-color: transparent;"
 
@@ -90,6 +90,36 @@ QProgressBar {
 QProgressBar::chunk {
     background-color: """+accent+""";
     border-radius: 2px;
+}
+
+/*SLIDERHORIZONTAL*/
+QSlider:horizontal {
+    min-width: 100px;
+    min-height: 30px;
+}
+
+QSlider::groove:horizontal {
+    height: 5px; 
+    background-color: rgb(255, 255, 255, 150);
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background-color: """+accent+""";
+    width: 13px;
+    min-height: 13px;
+}
+
+QSlider::handle:horizontal:hover {
+    background-color: """+accent+""";
+    width: 13px;
+    min-height: 13px;
+}
+
+QSlider::handle:horizontal:pressed {
+    background-color: """+accent+""";
+    width: 13;
+    min-height: 13px;
 }
 
 """
@@ -195,4 +225,36 @@ QProgressBar::chunk {
     background-color: """+accent+""";
     border-radius: 2px;
 }
+
+QSlider:horizontal {
+    min-width: 100px;
+    min-height: 30px;
+}
+
+QSlider::groove:horizontal {
+    height: 5px; 
+    background-color: rgb(0, 0, 0, 100);
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background-color: """+accent+""";
+    width: 13px;
+    min-height: 13px;
+
+}
+
+QSlider::handle:horizontal:hover {
+    background-color: """+accent+""";
+    width: 13px;
+    min-height: 13px;
+}
+
+QSlider::handle:horizontal:pressed {
+    background-color: """+accent+""";
+    width: 13px;
+    min-height: 13px;
+
+}
+
 """
