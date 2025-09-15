@@ -33,6 +33,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from mutagen.mp3 import MP3
+from mutagen.id3 import ID3, APIC
 from os import getcwd, path
 from win32mica import ApplyMica, MicaTheme, MicaStyle
 from models import style
@@ -127,7 +128,7 @@ class MusicPlayer(QMainWindow):
     def init_ui(self):
         global playlist
         self.setWindowTitle('Music Player')
-        self.setWindowIcon(QIcon(fr"{PATH}/assets/icons/music.png"))
+        self.setWindowIcon(QIcon(fr"{PATH}/assets/icons/music.ico"))
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.setGeometry(100, 100, 800, 500)
         self.setMinimumSize(800, 500)
@@ -330,14 +331,25 @@ class MusicPlayer(QMainWindow):
 
             self.model.appendRow(item)
 
-            audio = MP3(file)
+            audio = MP3(file, ID3=ID3)
+            cover = None
+
             try:
-                apic = audio.tags['APIC:'].data
-                cover = QPixmap()
-                cover.loadFromData(apic)
-                cover = cover.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-            except:
-                cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                if audio.tags:
+                    for key, tag in audio.tags.items():
+                        if key.startswith("APIC") and isinstance(tag, APIC):
+                            pixmap = QPixmap()
+                            pixmap.loadFromData(tag.data)
+                            cover = pixmap.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                            break
+
+            except Exception as e:
+                print(f"⚠️ Error reading cover: {e}")
+
+            if cover is None:
+                cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(
+                    50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+                )
 
             item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
             self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
@@ -367,14 +379,25 @@ class MusicPlayer(QMainWindow):
 
             self.model.appendRow(item)
 
-            audio = MP3(file)
+            audio = MP3(file, ID3=ID3)
+            cover = None
+
             try:
-                apic = audio.tags['APIC:'].data
-                cover = QPixmap()
-                cover.loadFromData(apic)
-                cover = cover.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-            except:
-                cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                if audio.tags:
+                    for key, tag in audio.tags.items():
+                        if key.startswith("APIC") and isinstance(tag, APIC):
+                            pixmap = QPixmap()
+                            pixmap.loadFromData(tag.data)
+                            cover = pixmap.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                            break
+
+            except Exception as e:
+                print(f"⚠️ Error reading cover: {e}")
+
+            if cover is None:
+                cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(
+                    50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+                )
 
             item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
             self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
@@ -405,18 +428,32 @@ class MusicPlayer(QMainWindow):
             for file in playlist["name"]:
                 item = QStandardItem(file)
                 self.model.appendRow(item)
-                audio = MP3(playlist["path"][playlist["name"].index(file)])
 
+                path = playlist["path"][playlist["name"].index(file)]
+                audio = MP3(path, ID3=ID3)
+
+                cover = None
                 try:
-                    apic = audio.tags['APIC:'].data
-                    cover = QPixmap()
-                    cover.loadFromData(apic)
-                    cover = cover.scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-                except:
-                    cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                    if audio.tags:
+                        for key, tag in audio.tags.items():
+                            if key.startswith("APIC") and isinstance(tag, APIC):
+                                pixmap = QPixmap()
+                                pixmap.loadFromData(tag.data)
+                                cover = pixmap.scaled(
+                                    50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+                                )
+                                break
+                except Exception as e:
+                    print(f"⚠️ error reading cover for {path}: {e}")
+
+                if cover is None:
+                    cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(
+                        50, 50, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+                    )
 
                 item.setData(QIcon(cover), QtCore.Qt.DecorationRole)
-                self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
+
+            self.numberlist.setText(f"There are {len(playlist['name'])} songs available")
         except ValueError:
             pass
         
@@ -448,6 +485,7 @@ class MusicPlayer(QMainWindow):
         """
 
         global is_play, played_count, played_music, music_length
+
         index = self.music_list.currentIndex().data()
         music = playlist["path"][playlist["name"].index(index)]
         played_music = index
@@ -456,22 +494,33 @@ class MusicPlayer(QMainWindow):
         mixer.music.load(music)
         mixer.music.play()
 
-        audio = MP3(music)
-
+        audio = MP3(music, ID3=ID3)
         music_length = round(audio.info.length)
         self.progressBar.setMaximum(music_length)
         self.progressBar.setValue(played_count)
         self.timer.start()
 
+        cover = None
         try:
-            apic = audio.tags['APIC:'].data
-            cover = QPixmap()
-            cover.loadFromData(apic)
-            cover = cover.scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-        except:
-            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+            if audio.tags:
+                for key, tag in audio.tags.items():
+                    if key.startswith("APIC") and isinstance(tag, APIC):
+                        pixmap = QPixmap()
+                        pixmap.loadFromData(tag.data)
+                        cover = pixmap.scaled(
+                            300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+                        )
+                        break
+        except Exception as e:
+            print(f"⚠️ error reading cover for {music}: {e}")
+
+        if cover is None:
+            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(
+                300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+            )
 
         self.cover_label.setPixmap(cover)
+
         is_play = True
         self.music_name.setText(playlist["name"][playlist["path"].index(music)])
         self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
@@ -495,37 +544,54 @@ class MusicPlayer(QMainWindow):
         global played_music, music_length, played_count, is_play
         played_count = 0
         self.timer.stop()
+
         try:
-            played_music = playlist["name"][playlist["name"].index(played_music)+1]
+            played_music = playlist["name"][playlist["name"].index(played_music) + 1]
         except:
             played_music = playlist["name"][0]
+
         music = playlist["path"][playlist["name"].index(played_music)]
 
+        # Play new track
         mixer.music.load(music)
         mixer.music.play()
 
-        audio = MP3(music)
-
+        # Metadata
+        audio = MP3(music, ID3=ID3)
         music_length = round(audio.info.length)
         self.progressBar.setMaximum(music_length)
         self.progressBar.setValue(played_count)
         self.timer.start()
 
+        # Try to load cover
+        cover = None
         try:
-            apic = audio.tags['APIC:'].data
-            cover = QPixmap()
-            cover.loadFromData(apic)
-            cover = cover.scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-        except:
-            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+            if audio.tags:
+                for key, tag in audio.tags.items():
+                    if key.startswith("APIC") and isinstance(tag, APIC):
+                        pixmap = QPixmap()
+                        pixmap.loadFromData(tag.data)
+                        cover = pixmap.scaled(
+                            300, 300,
+                            aspectRatioMode=QtCore.Qt.KeepAspectRatio
+                        )
+                        break
+        except Exception as e:
+            print(f"⚠️ Error reading cover: {e}")
+
+        # Default cover
+        if cover is None:
+            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(
+                300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+            )
 
         self.cover_label.setPixmap(cover)
+
+        # Update UI
         is_play = True
         self.music_name.setText(playlist["name"][playlist["path"].index(music)])
         self.play.setIcon(QIcon(fr"{PATH}/assets/icons/pause.png"))
-        
-        
-        
+
     def nextsong_auto(self):
         global played_music, music_length, played_count, is_play
         played_count = 0
@@ -585,15 +651,23 @@ class MusicPlayer(QMainWindow):
             
         elif mod == "No-repeat":
             audio = ""
-        
 
+        cover = None
         try:
-            apic = audio.tags['APIC:'].data
-            cover = QPixmap()
-            cover.loadFromData(apic)
-            cover = cover.scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-        except:
-            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+            if audio.tags:
+                for key, tag in audio.tags.items():
+                    if key.startswith("APIC") and isinstance(tag, APIC):
+                        pixmap = QPixmap()
+                        pixmap.loadFromData(tag.data)
+                        cover = pixmap.scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                        break
+        except Exception as e:
+            print(f"⚠️ Cover error: {e}")
+
+        if cover is None:
+            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(
+                300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+            )
 
         self.cover_label.setPixmap(cover)
         is_play = True
@@ -639,13 +713,22 @@ class MusicPlayer(QMainWindow):
         self.progressBar.setValue(played_count)
         self.timer.start()
 
+        cover = None
         try:
-            apic = audio.tags['APIC:'].data
-            cover = QPixmap()
-            cover.loadFromData(apic)
-            cover = cover.scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
-        except:
-            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+            if audio.tags:
+                for key, tag in audio.tags.items():
+                    if key.startswith("APIC") and isinstance(tag, APIC):
+                        pixmap = QPixmap()
+                        pixmap.loadFromData(tag.data)
+                        cover = pixmap.scaled(300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio)
+                        break
+        except Exception as e:
+            print(f"⚠️ Cover error: {e}")
+
+        if cover is None:
+            cover = QPixmap(fr"{PATH}/assets/icons/music.png").scaled(
+                300, 300, aspectRatioMode=QtCore.Qt.KeepAspectRatio
+            )
 
         self.cover_label.setPixmap(cover)
         is_play = True
@@ -781,6 +864,7 @@ class MusicPlayer(QMainWindow):
 if __name__ == '__main__':
     if win_11_detect():
         app = QApplication(sys.argv)
+        app.setWindowIcon(QIcon(fr"{PATH}/assets/icons/music.ico"))
     else:
         if is_dark_mode():
             os.environ[
